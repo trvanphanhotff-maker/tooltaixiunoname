@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Tool Tài Xỉu Nháy By NoName</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:
+        radial-gradient(circle at 20% 20%, #1e293b, transparent 40%),
+        radial-gradient(circle at 80% 80%, #312e81, transparent 45%),
+        linear-gradient(135deg, #020617, #020617);
+}
+
+/* ===== KEY GATE ===== */
+#keyGate {
+    background: #020617;
+    padding: 40px;
+    border-radius: 24px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+}
+
+#keyGate input {
+    padding: 16px;
+    font-size: 18px;
+    border-radius: 14px;
+    border: none;
+    width: 280px;
+    text-align: center;
+}
+
+#keyGate button {
+    margin-top: 18px;
+    padding: 14px 36px;
+    font-size: 18px;
+    border-radius: 14px;
+    border: none;
+    background: #dc2626;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#keyMsg { margin-top: 14px; color: #f87171; }
+
+/* ===== TOOL ===== */
+.container {
+    display: none;
+    width: 90%;
+    max-width: 900px;
+    padding: 42px;
+    border-radius: 32px;
+    background: linear-gradient(180deg, #f9fafb, #eef0f3);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+}
+
+.title {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 48px;
+}
+
+.tx-row {
+    display: flex;
+    justify-content: center;
+    gap: 150px;
+    margin-bottom: 20px;
+}
+
+.tx-wrap { text-align: center; }
+
+.tx-circle {
+    width: 210px;
+    height: 210px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 46px;
+    font-weight: 800;
+    border: 6px solid rgba(255,255,255,0.6);
+}
+
+.tai {
+    background: linear-gradient(180deg, #020617, #111827);
+    color: #ef4444;
+}
+
+.xiu {
+    background: linear-gradient(180deg, #ffffff, #e5e7eb);
+    color: #15803d;
+}
+
+.active {
+    border-color: red;
+    animation: glow 1s infinite;
+}
+
+@keyframes glow {
+    50% { box-shadow: 0 0 40px red; }
+}
+
+.confidence {
+    margin-top: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #b91c1c;
+}
+
+.md5-box {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.md5-box input {
+    width: 420px;
+    padding: 18px;
+    font-size: 20px;
+    border-radius: 16px;
+    border: 2px solid #cbd5f5;
+    text-align: center;
+}
+
+.md5-box button {
+    margin-top: 22px;
+    padding: 16px 44px;
+    font-size: 20px;
+    border-radius: 16px;
+    border: none;
+    background: #020617;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== KEY GATE ===== -->
+<div id="keyGate">
+    <h2>Nhập KEY sử dụng</h2>
+    <input id="keyInput" placeholder="Nhập key...">
+    <br>
+    <button onclick="checkKey()">XÁC NHẬN</button>
+    <div id="keyMsg"></div>
+</div>
+
+<!-- ===== TOOL ===== -->
+<div class="container" id="toolBox">
+    <div class="title">Tool Tài Xỉu Nháy By NoName</div>
+
+    <div class="tx-row">
+        <div class="tx-wrap">
+            <div id="iconTai" class="tx-circle tai">TÀI</div>
+            <div id="confTai" class="confidence"></div>
+        </div>
+        <div class="tx-wrap">
+            <div id="iconXiu" class="tx-circle xiu">XỈU</div>
+            <div id="confXiu" class="confidence"></div>
+        </div>
+    </div>
+
+    <div class="md5-box">
+        <input id="md5Input" maxlength="32" placeholder="Dán mã MD5 32 ký tự">
+        <br>
+        <button onclick="predictTaiXiu()">PHÂN TÍCH</button>
+    </div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const API_URL = "http://de3.bot-hosting.net:22089/check_key";
+let KEY_OK = false;
+
+/* ===== DEVICE ID ===== */
+function getDeviceId(){
+    return btoa(
+        navigator.userAgent +
+        screen.width + screen.height +
+        navigator.language
+    );
+}
+
+/* ===== CHECK KEY ===== */
+async function checkKey(){
+    const key = keyInput.value.trim();
+    keyMsg.textContent = "Đang kiểm tra...";
+
+    try{
+        const res = await fetch(API_URL,{
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({
+                key,
+                device: getDeviceId()
+            })
+        });
+
+        const data = await res.json();
+
+        if(data.status==="ok"){
+            KEY_OK = true;
+            localStorage.setItem("tx_key_ok","1");
+            keyGate.style.display="none";
+            toolBox.style.display="block";
+        }else{
+            keyMsg.textContent = "❌ Key không hợp lệ / hết hạn / vượt thiết bị";
+        }
+    }catch{
+        keyMsg.textContent = "❌ Không kết nối được server";
+    }
+}
+
+/* ===== AUTO LOGIN ===== */
+if(localStorage.getItem("tx_key_ok")==="1"){
+    KEY_OK = true;
+    keyGate.style.display="none";
+    toolBox.style.display="block";
+}
+
+/* ===== 11 THUẬT TOÁN ===== */
+function algo1(md5){ return parseInt(md5[31],16) < 8; }
+function algo2(md5){ return BigInt("0x"+md5) % 2n === 0n; }
+function algo3(md5){ return byteSum(md5) % 2 === 0; }
+function algo4(md5){ return weightedByte(md5) % 2 === 0; }
+function algo5(md5){ return xorBytes(md5) % 2 === 0; }
+function algo6(md5){ return splitHalf(md5); }
+function algo7(md5){ return dice(md5); }
+function algo8(md5){ return BigInt("0x"+md5) % 97n >= 49n; }
+function algo9(md5){ return polynomial(md5) % 2 === 0; }
+async function algo10(md5){ return (await shaRehash(md5)) % 2 === 0; }
+function algo11(md5){ return nibbleWeighted(md5) % 2 === 0; }
+
+const algorithms = [algo1,algo2,algo3,algo4,algo5,algo6,algo7,algo8,algo9,algo10,algo11];
+
+/* ===== HÀM PHỤ ===== */
+function byteSum(md5){ let s=0; for(let i=0;i<32;i+=2) s+=parseInt(md5.substr(i,2),16); return s; }
+function weightedByte(md5){ let s=0; for(let i=0;i<32;i+=2) s+=parseInt(md5.substr(i,2),16)*(i/2+1); return s; }
+function xorBytes(md5){ let x=0; for(let i=0;i<32;i+=2) x^=parseInt(md5.substr(i,2),16); return x; }
+function splitHalf(md5){
+    let a=0,b=0;
+    for(let i=0;i<16;i+=2) a+=parseInt(md5.substr(i,2),16);
+    for(let i=16;i<32;i+=2) b+=parseInt(md5.substr(i,2),16);
+    return a>b;
+}
+function dice(md5){
+    let sum=0;
+    for(let i=0;i<6;i++) sum+=(parseInt(md5[i],16)%6+1);
+    return sum>=11;
+}
+function polynomial(md5){
+    let h=0,p=31;
+    for(let i=0;i<32;i+=2) h+=parseInt(md5.substr(i,2),16)*Math.pow(p,i/2);
+    return h;
+}
+function nibbleWeighted(md5){
+    let s=0;
+    for(let i=0;i<32;i++) s+=parseInt(md5[i],16)*(i+1);
+    return s;
+}
+async function shaRehash(md5){
+    const buf=new TextEncoder().encode(md5);
+    const hash=await crypto.subtle.digest("SHA-256",buf);
+    return new Uint8Array(hash).reduce((a,b)=>a+b,0);
+}
+
+/* ===== MAIN ===== */
+async function predictTaiXiu(){
+    if(!KEY_OK) return alert("❌ Vui lòng nhập key hợp lệ");
+
+    const md5 = md5Input.value.trim();
+    resetUI();
+    if(!/^[a-fA-F0-9]{32}$/.test(md5)) return alert("MD5 không hợp lệ");
+
+    let tai=0,xiu=0;
+    for(const algo of algorithms){
+        (await algo(md5)) ? tai++ : xiu++;
+    }
+
+    const result = tai>xiu ? "TÀI":"XỈU";
+    const confidence = Math.round(Math.max(tai,xiu)/11*100);
+
+    setTimeout(()=>showResult(result,confidence),5000);
+}
+
+function showResult(res,conf){
+    if(res==="TÀI"){
+        iconTai.classList.add("active");
+        confTai.textContent="Độ tin cậy: "+conf+"%";
+    }else{
+        iconXiu.classList.add("active");
+        confXiu.textContent="Độ tin cậy: "+conf+"%";
+    }
+}
+
+function resetUI(){
+    iconTai.classList.remove("active");
+    iconXiu.classList.remove("active");
+    confTai.textContent="";
+    confXiu.textContent="";
+}
+
+md5Input.addEventListener("input", resetUI);
+</script>
+
+</body>
+</html>
